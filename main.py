@@ -1,10 +1,16 @@
 # Copyright (C) 2021 Bastiaan Teeuwen <bastiaan@mkcl.nl>
 # Hogeschool Rotterdam
 
-from flask import Flask
-from hbp   import *
+from flask   import Flask
+from OpenSSL import SSL
+from hbp     import *
 import getopt
 import sys
+
+context = SSL.Context(SSL.TLSv1_2_METHOD)
+context.use_privatekey_file('../ssl/private/api.key')
+context.use_certificate_chain_file('../ssl/certs/api-chain.crt')
+# load CA?
 
 app = Flask(__name__)
 hbp = None
@@ -66,7 +72,7 @@ def main(argv):
     print(f'Connected to Herbank Server @ {host}:{port}')
     print(f'The server is listening on port {hostPort}')
 
-    app.run(host='0.0.0.0', port=hostPort)
+    app.run(host='0.0.0.0', port=hostPort, ssl_context=context)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
