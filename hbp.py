@@ -51,8 +51,10 @@ class HBP:
     HBP_TRANSFER_INSUFFICIENT_FUNDS = 2
 
     def __init__(self, host, port):
-        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH, cafile='../ssl/certs/congo-ca-chain.crt')
-        context.load_cert_chain(certfile='../ssl/certs/api-chain.crt', keyfile='../ssl/private/api.key')
+        #context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH, cafile='../ssl/certs/congo-ca-chain.crt')
+        #context.load_cert_chain(certfile='../ssl/certs/api-chain.crt', keyfile='../ssl/private/api.key')
+        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH, cafile='crt/ca.crt')
+        context.load_cert_chain(certfile='crt/client.crt', keyfile='crt/client.key')
 
         plainsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 

@@ -1,7 +1,7 @@
 # Copyright (C) 2021 Bastiaan Teeuwen <bastiaan@mkcl.nl>
 # Hogeschool Rotterdam
 
-from flask   import Flask
+from flask   import Flask, request
 from hbp     import *
 import getopt
 import sys
@@ -12,6 +12,29 @@ context = ('../ssl/certs/api-chain.crt', '../ssl/private/api.key')
 app = Flask(__name__)
 hbp = None
 
+def login(data):
+    if data == None:
+        return ('Json wrong', 432)
+
+    try:
+        # check if we know this bank (unfortunately the other group didn't make it... so only INGrid for now)
+        if data['header']['receiveBankName'] != 'INGB':
+            return ('Account not registered', 433)
+
+        reply = hbp.login('', data['body']['iban'], data['body']['pin'])
+    except KeyError:
+        return ('Json wrong', 432)
+
+    # check the reply status
+    if reply == hbp.HBP_LOGIN_GRANTED:
+        return None
+    elif reply == hbp.HBP_LOGIN_DENIED:
+        return ('Pincode wrong', 435)
+    elif reply == hbp.HBP_LOGIN_BLOCKED:
+        return ('Account blocked', 434)
+    else:
+        return ('Account not registered', 433)
+
 # only accept GET requests even though this is technically incorrect
 # (bcs data in included in the body, which is not allowed according to the spec)
 # should've used my server ;)
@@ -19,21 +42,45 @@ hbp = None
 # Connection test endpoint
 @app.route('/test')
 def test():
-    return 'Test OK', 200, { 'Content-Type': 'application/json; charset=utf-8' }
+    return 'Test OK', 200
 
 # Balance query endpoint
 @app.route('/balance')
 def balance():
-    ret = '10000', 209
+    # attempt to login
+    login_reply = login(request.get_json())
+    if login_reply != None:
+        return login_reply
 
-    return ret, { 'Content-Type': 'application/json; charset=utf-8' }
+    # retrieve the balance and log out
+    balance = hbp.balance()
+    hbp.logout()
 
-# Transfer money endpoint
-@app.route('/transfer')
-def transfer():
-    ret = 'OK', 208
+    return (balance, 208)
 
-    return ret, { 'Content-Type': 'application/json; charset=utf-8' }
+# Withdraw money endpoint
+@app.route('/withdraw')
+def withdraw():
+    data = request.get_json()
+
+    # attempt to login
+    login_reply = login(data)
+    if login_reply != None:
+        return login_reply
+
+    try:
+        transfer = hbp.transfer('', data['body']['amount'] * 100)
+    except KeyError:
+        hbp.logout()
+        return ('Json wrong', 432)
+    hbp.logout()
+
+    if transfer in (hbp.HBP_TRANSFER_SUCCESS, hbp.HBP_TRANSFER_PROCESSING):
+        return ('OK', 208)
+    elif reply == hbp.HBP_TRANSFER_INSUFFICIENT_FUNDS:
+        return ('Balance too low', 437)
+    else:
+        return ('Account not registered', 433)
 
 # print usage information
 def help():
