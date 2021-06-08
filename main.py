@@ -27,12 +27,16 @@ def test():
 # Balance query endpoint
 @app.route('/balance')
 def balance():
-    return '{ "balance": 10000 }', 200, { 'Content-Type': 'application/json; charset=utf-8' }
+    ret = '10000', 209
+
+    return ret, { 'Content-Type': 'application/json; charset=utf-8' }
 
 # Transfer money endpoint
 @app.route('/transfer')
 def transfer():
-    return 'OK', 200, { 'Content-Type': 'application/json; charset=utf-8' }
+    ret = 'OK', 208
+
+    return ret, { 'Content-Type': 'application/json; charset=utf-8' }
 
 # print usage information
 def help():
