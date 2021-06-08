@@ -2,14 +2,11 @@
 # Hogeschool Rotterdam
 
 from flask   import Flask
-from OpenSSL import SSL
 from hbp     import *
 import getopt
 import sys
 
-context = SSL.Context(SSL.TLSv1_2_METHOD)
-context.use_privatekey_file('../ssl/private/api.key')
-context.use_certificate_chain_file('../ssl/certs/api-chain.crt')
+context = ('../ssl/certs/api-chain.crt', '../ssl/private/api.key')
 # load CA?
 
 app = Flask(__name__)
